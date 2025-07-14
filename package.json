@@ -1,28 +1,58 @@
 {
-  "name": "taxi-company-api",
+  "name": "taxico-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "TaxiCo Backend with Enhanced Backup System",
+  "main": "build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node build/index.js",
+    "dev": "nodemon src/index.ts",
+    "build": "tsc",
+    "test": "jest",
+    "backup": "ts-node src/backup-cli.ts",
+    "backup:create": "ts-node src/backup-cli.ts create",
+    "backup:list": "ts-node src/backup-cli.ts list",
+    "backup:schedule": "ts-node src/backup-cli.ts schedule --status",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "taxi",
+    "booking",
+    "backup",
+    "mongodb"
+  ],
+  "author": "TaxiCo Team",
+  "license": "MIT",
   "dependencies": {
-    "@google-cloud/storage": "^7.16.0",
-    "bcryptjs": "^2.4.3",
-    "date-fns": "^4.1.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.1"
+    "@google-cloud/storage": "^6.9.0",
+    "date-fns": "^2.29.3",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.3",
+    "node-cron": "^3.0.2"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.10.1",
-    "nodemon": "^3.1.7",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "@types/express": "^4.17.17",
+    "@types/inquirer": "^9.0.8",
+    "@types/node": "^18.15.11",
+    "@types/node-cron": "^3.0.7",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.3",
+    "commander": "^10.0.0",
+    "eslint": "^8.37.0",
+    "inquirer": "^8.2.5",
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "ora": "^5.4.1",
+    "prettier": "^2.8.7",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
   }
 }
