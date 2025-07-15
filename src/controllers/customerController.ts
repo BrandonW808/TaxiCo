@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import Customer from '../models/customer';
+import Customer, { ICustomer } from '../models/customer';
 
 const register = async (req: Request, res: Response) => {
     try {
@@ -36,4 +36,21 @@ const login = async (req: Request, res: Response) => {
     }
 };
 
-export { register, login };
+const update = async (req: Request, res: Response) => {
+    try {
+        let customer: ICustomer = req.customer;
+        if (!customer) {
+            res.status(404).json({ error: 'Customer not found' });
+            return;
+        }
+
+        customer = req.body.customer;
+        customer.save();
+        res.send()
+
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+export { register, login, update };
