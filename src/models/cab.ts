@@ -1,7 +1,56 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface ICab extends Document {
+    name: string;
+    registeredNumber: string;
+    licensePlate: string;
+    model: string;
+    make: string;
+    year: number;
+    color: string;
+    seatingCapacity: number;
+    fuelType: string;
+    mileage: number;
+    imageUrl?: string;
+    purchasedPrice?: number;
+    purchasedDate?: Date;
+    insuranceExpiry?: Date;
+    maintenanceHistory: Array<{
+        date: Date;
+        details: string;
+        cost: number;
+        odometer: number;
+    }>;
+    drivers: Array<{
+        driver: mongoose.Types.ObjectId;
+        departTime: Date;
+        endTime: Date;
+        totalDistance: number;
+        totalFares: number;
+    }>;
+    status: 'Available' | 'On Service' | 'Maintenance' | 'Breakdown' | 'Inactive';
+    location: {
+        type: 'Point';
+        coordinates: [number, number];
+        address?: string;
+    };
+    GPSEnabled: boolean;
+    speed?: number;
+    heading?: number;
+    lastUpdated: Date;
+    notes?: string;
+    maintenanceReminder?: Date;
+    inspectionReminder?: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 const cabSchema = new mongoose.Schema({
-    name: String,
+    name: { 
+        type: String, 
+        required: true,
+        trim: true
+    },
     registeredNumber: {
         type: String,
         unique: true, // Ensure unique registration numbers for each cab
@@ -12,13 +61,34 @@ const cabSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
-    model: String,
-    make: String,
-    year: Number,
-    color: String,
-    seatingCapacity: Number,
-    fuelType: String, // e.g., 'Gasoline', 'Electric', 'Hybrid'
-    mileage: Number,
+    model: { 
+        type: String, 
+        required: true 
+    },
+    make: { 
+        type: String, 
+        required: true 
+    },
+    year: { 
+        type: Number, 
+        required: true 
+    },
+    color: { 
+        type: String, 
+        required: true 
+    },
+    seatingCapacity: { 
+        type: Number, 
+        required: true 
+    },
+    fuelType: { 
+        type: String, 
+        required: true 
+    }, // e.g., 'Gasoline', 'Electric', 'Hybrid'
+    mileage: { 
+        type: Number, 
+        required: true 
+    },
     imageUrl: String,
     purchasedPrice: Number,
     purchasedDate: Date,
@@ -62,4 +132,4 @@ const cabSchema = new mongoose.Schema({
     inspectionReminder: Date, // Date for the next scheduled inspection  
 }, { timestamps: true });
 
-module.exports = mongoose.model('Cab', cabSchema); 
+export default mongoose.model<ICab>('Cab', cabSchema);

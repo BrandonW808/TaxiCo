@@ -1,10 +1,33 @@
 import mongoose, { Document, Schema } from 'mongoose';
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import bcrypt from 'bcrypt';
+
+export interface IDriver extends Document {
+    name: string;
+    driverNumber: string;
+    location: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    password: string;
+    tokens: Array<{
+        token: string;
+    }>;
+    createdAt: Date;
+    updatedAt: Date;
+    comparePassword(password: string): Promise<boolean>;
+}
 
 const driverSchema = new mongoose.Schema({
-    name: String,
-    driverNumber: String,
+    name: { 
+        type: String, 
+        required: true,
+        trim: true
+    },
+    driverNumber: { 
+        type: String, 
+        required: true,
+        unique: true 
+    },
     location: {
         type: {
             type: String,
@@ -29,8 +52,11 @@ const driverSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
+// Index for geospatial queries
+driverSchema.index({ location: '2dsphere' });
+
 // Middleware to hash the password before saving the driver document
-driverSchema.pre('save', async function (next: () => void) {
+driverSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
@@ -38,8 +64,7 @@ driverSchema.pre('save', async function (next: () => void) {
 
 // Method to compare a given password with the hashed password in the database
 driverSchema.methods.comparePassword = async function (password: string) {
-    console.log(`Password: ${password} this.password: ${this.password}`);
     return bcrypt.compare(password, this.password);
 };
 
-module.exports = mongoose.model('Driver', driverSchema);
+export default mongoose.model<IDriver>('Driver', driverSchema);

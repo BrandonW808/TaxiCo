@@ -1,5 +1,31 @@
-// models/driver.js
+// models/ride.ts
 import mongoose, { Document, Schema } from 'mongoose';
+
+export interface IRide extends Document {
+    cab: mongoose.Types.ObjectId;
+    driver: mongoose.Types.ObjectId;
+    customer: mongoose.Types.ObjectId;
+    pickupLocation: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    dropoffLocation: {
+        type: 'Point';
+        coordinates: [number, number];
+    };
+    status: 'pending' | 'requested' | 'assigned' | 'completed' | 'cancelled';
+    requestTime: Date;
+    startTime?: Date;
+    endTime?: Date;
+    fare?: number;
+    payment?: {
+        method: string;
+        tip?: number;
+        amountPaid?: number;
+    };
+    createdAt: Date;
+    updatedAt: Date;
+}
 
 // Ride Schema
 const rideSchema = new mongoose.Schema({
@@ -46,16 +72,18 @@ const rideSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-
     startTime: Date,
     endTime: Date,
     fare: Number,
     payment: {
-        method
-            : { type: String },
+        method: { type: String },
         tip: { type: Number },
         amountPaid: { type: Number },
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Ride', rideSchema); 
+// Index for geospatial queries
+rideSchema.index({ pickupLocation: '2dsphere' });
+rideSchema.index({ dropoffLocation: '2dsphere' });
+
+export default mongoose.model<IRide>('Ride', rideSchema);
