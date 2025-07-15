@@ -16,23 +16,23 @@ export interface ICustomer extends Document {
 }
 
 const customerSchema = new Schema({
-    name: { 
-        type: String, 
+    name: {
+        type: String,
         required: true,
         trim: true,
         minlength: 2,
         maxlength: 50
     },
-    email: { 
-        type: String, 
-        required: true, 
+    email: {
+        type: String,
+        required: true,
         unique: true,
         lowercase: true,
         trim: true,
         match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     },
-    password: { 
-        type: String, 
+    password: {
+        type: String,
         required: true,
         minlength: 8,
         select: false  // Don't include password in queries by default
@@ -59,7 +59,7 @@ const customerSchema = new Schema({
 }, {
     timestamps: true, // Automatically add createdAt and updatedAt
     toJSON: {
-        transform: function(doc, ret) {
+        transform: function (doc, ret) {
             delete ret.password;
             delete ret.loginAttempts;
             delete ret.lockUntil;
@@ -69,16 +69,16 @@ const customerSchema = new Schema({
 });
 
 // Virtual for account lock status
-customerSchema.virtual('isLocked').get(function() {
-    return !!(this.lockUntil && this.lockUntil > Date.now());
+customerSchema.virtual('isLocked').get(function () {
+    return !!(this.lockUntil && new Date(this.lockUntil).getTime() > Date.now());
 });
 
 // Pre-save middleware to handle login attempts
-customerSchema.pre('save', function(next) {
+customerSchema.pre('save', function (next) {
     if (!this.isModified('loginAttempts') && !this.isNew) return next();
-    
+
     // If we have a previous lock that has expired, restart at 1
-    if (this.lockUntil && this.lockUntil < Date.now()) {
+    if (this.lockUntil && new Date(this.lockUntil).getTime() < Date.now()) {
         return this.updateOne({
             $unset: {
                 lockUntil: 1
@@ -88,15 +88,15 @@ customerSchema.pre('save', function(next) {
             }
         }, next);
     }
-    
+
     next();
 });
 
 // Methods
-customerSchema.methods.incLoginAttempts = function() {
+customerSchema.methods.incLoginAttempts = function () {
     const maxAttempts = 5;
     const lockTime = 30 * 60 * 1000; // 30 minutes
-    
+
     // If we have a previous lock that has expired, restart at 1
     if (this.lockUntil && this.lockUntil < Date.now()) {
         return this.updateOne({
@@ -108,20 +108,20 @@ customerSchema.methods.incLoginAttempts = function() {
             }
         });
     }
-    
-    const updates = { $inc: { loginAttempts: 1 } };
-    
+
+    const updates: any = { $inc: { loginAttempts: 1 } };
+
     // Lock the account if we've reached max attempts
     if (this.loginAttempts + 1 >= maxAttempts && !this.isLocked) {
         updates.$set = {
             lockUntil: Date.now() + lockTime
         };
     }
-    
+
     return this.updateOne(updates);
 };
 
-customerSchema.methods.resetLoginAttempts = function() {
+customerSchema.methods.resetLoginAttempts = function () {
     return this.updateOne({
         $unset: {
             loginAttempts: 1,

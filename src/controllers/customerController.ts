@@ -1,10 +1,9 @@
 // src/controllers/customerController.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
-import Customer, { ICustomer } from '../models/customer';
-import { revokeToken } from '../middleware/auth';
+import Customer from '../models/customer';
 
 // Get JWT secret from environment variable
 const getJwtSecret = (): string => {
@@ -22,12 +21,12 @@ export const validateRegistration = [
         .trim()
         .escape()
         .withMessage('Name must be between 2 and 50 characters'),
-    
+
     body('email')
         .isEmail()
         .normalizeEmail()
         .withMessage('Valid email address required'),
-    
+
     body('password')
         .isLength({ min: 8 })
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
@@ -40,7 +39,7 @@ export const validateLogin = [
         .isEmail()
         .normalizeEmail()
         .withMessage('Valid email address required'),
-    
+
     body('password')
         .notEmpty()
         .withMessage('Password is required'),
@@ -64,7 +63,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
         // Check if user already exists
         const existingCustomer = await Customer.findOne({ email });
         if (existingCustomer) {
-            res.status(409).json({ 
+            res.status(409).json({
                 error: 'Customer with this email already exists',
                 code: 'USER_EXISTS'
             });
@@ -74,17 +73,17 @@ const register = async (req: Request, res: Response): Promise<void> => {
         // Hash password with higher salt rounds for better security
         const saltRounds = 12;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
-        
-        const customer = new Customer({ 
-            name, 
-            email, 
-            password: hashedPassword 
+
+        const customer = new Customer({
+            name,
+            email,
+            password: hashedPassword
         });
 
         await customer.save();
 
         // Return success without sensitive data
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'Customer created successfully',
             customer: {
                 id: customer._id,
@@ -94,14 +93,14 @@ const register = async (req: Request, res: Response): Promise<void> => {
         });
     } catch (error: any) {
         console.error('Registration error:', error);
-        
+
         if (error.code === 11000) {
-            res.status(409).json({ 
+            res.status(409).json({
                 error: 'Customer with this email already exists',
                 code: 'USER_EXISTS'
             });
         } else {
-            res.status(500).json({ 
+            res.status(500).json({
                 error: 'Registration failed',
                 code: 'REGISTRATION_ERROR'
             });
@@ -126,9 +125,9 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
         // Find customer and include password for comparison
         const customer = await Customer.findOne({ email }).select('+password');
-        
+
         if (!customer) {
-            res.status(401).json({ 
+            res.status(401).json({
                 error: 'Invalid credentials',
                 code: 'INVALID_CREDENTIALS'
             });
@@ -137,9 +136,9 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
         // Compare password
         const isMatch = await bcrypt.compare(password, customer.password);
-        
+
         if (!isMatch) {
-            res.status(401).json({ 
+            res.status(401).json({
                 error: 'Invalid credentials',
                 code: 'INVALID_CREDENTIALS'
             });
@@ -153,14 +152,16 @@ const login = async (req: Request, res: Response): Promise<void> => {
             role: customer.role || 'customer'
         };
 
+        const options: SignOptions = {
+            expiresIn: (process.env.JWT_EXPIRES_IN || '1h') as any,
+            issuer: 'taxicom-backend',
+            subject: customer._id.toString()
+        };
+
         const token = jwt.sign(
             tokenPayload,
             getJwtSecret(),
-            { 
-                expiresIn: process.env.JWT_EXPIRES_IN || '1h',
-                issuer: 'taxicom-backend',
-                subject: customer._id.toString()
-            }
+            options
         );
 
         // Set secure cookie (optional, for additional security)
@@ -171,7 +172,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
             maxAge: 60 * 60 * 1000 // 1 hour
         });
 
-        res.json({ 
+        res.json({
             message: 'Login successful',
             token,
             user: {
@@ -183,7 +184,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
         });
     } catch (error: any) {
         console.error('Login error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Login failed',
             code: 'LOGIN_ERROR'
         });
@@ -194,9 +195,9 @@ const update = async (req: Request, res: Response): Promise<void> => {
     try {
         // The user is already authenticated by the authenticateForUpdate middleware
         const customer = req.customer;
-        
+
         if (!customer) {
-            res.status(404).json({ 
+            res.status(404).json({
                 error: 'Customer not found',
                 code: 'CUSTOMER_NOT_FOUND'
             });
@@ -222,13 +223,13 @@ const update = async (req: Request, res: Response): Promise<void> => {
 
         // Check if email is being changed and if it's already taken
         if (updates.email && updates.email !== customer.email) {
-            const existingCustomer = await Customer.findOne({ 
+            const existingCustomer = await Customer.findOne({
                 email: updates.email,
                 _id: { $ne: customer._id }
             });
-            
+
             if (existingCustomer) {
-                res.status(409).json({ 
+                res.status(409).json({
                     error: 'Email address already in use',
                     code: 'EMAIL_IN_USE'
                 });
@@ -240,14 +241,14 @@ const update = async (req: Request, res: Response): Promise<void> => {
         const updatedCustomer = await Customer.findByIdAndUpdate(
             customer._id,
             updates,
-            { 
+            {
                 new: true,
                 runValidators: true
             }
         ).select('-password');
 
         if (!updatedCustomer) {
-            res.status(404).json({ 
+            res.status(404).json({
                 error: 'Customer not found',
                 code: 'CUSTOMER_NOT_FOUND'
             });
@@ -261,14 +262,14 @@ const update = async (req: Request, res: Response): Promise<void> => {
 
     } catch (error: any) {
         console.error('Update error:', error);
-        
+
         if (error.code === 11000) {
-            res.status(409).json({ 
+            res.status(409).json({
                 error: 'Email address already in use',
                 code: 'EMAIL_IN_USE'
             });
         } else {
-            res.status(500).json({ 
+            res.status(500).json({
                 error: 'Update failed',
                 code: 'UPDATE_ERROR'
             });
@@ -279,9 +280,9 @@ const update = async (req: Request, res: Response): Promise<void> => {
 const getProfile = async (req: Request, res: Response): Promise<void> => {
     try {
         const customer = req.customer;
-        
+
         if (!customer) {
-            res.status(404).json({ 
+            res.status(404).json({
                 error: 'Customer not found',
                 code: 'CUSTOMER_NOT_FOUND'
             });
@@ -299,7 +300,7 @@ const getProfile = async (req: Request, res: Response): Promise<void> => {
 
     } catch (error: any) {
         console.error('Get profile error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to get profile',
             code: 'PROFILE_ERROR'
         });
@@ -310,22 +311,22 @@ const logout = async (req: Request, res: Response): Promise<void> => {
     try {
         // Token is revoked by the logout middleware
         res.clearCookie('authToken');
-        res.json({ 
+        res.json({
             message: 'Logout successful'
         });
     } catch (error: any) {
         console.error('Logout error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Logout failed',
             code: 'LOGOUT_ERROR'
         });
     }
 };
 
-export { 
-    register, 
-    login, 
-    update, 
-    getProfile, 
-    logout 
+export {
+    register,
+    login,
+    update,
+    getProfile,
+    logout
 };

@@ -4,7 +4,7 @@ export interface ICab extends Document {
     name: string;
     registeredNumber: string;
     licensePlate: string;
-    model: string;
+    carModel: string; // 'model' conflicts with the mongoose Document property, consider using the more descriptive 'carModel'
     make: string;
     year: number;
     color: string;
@@ -46,8 +46,8 @@ export interface ICab extends Document {
 }
 
 const cabSchema = new mongoose.Schema({
-    name: { 
-        type: String, 
+    name: {
+        type: String,
         required: true,
         trim: true
     },
@@ -61,33 +61,33 @@ const cabSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
-    model: { 
-        type: String, 
-        required: true 
+    carModel: {
+        type: String,
+        required: true
     },
-    make: { 
-        type: String, 
-        required: true 
+    make: {
+        type: String,
+        required: true
     },
-    year: { 
-        type: Number, 
-        required: true 
+    year: {
+        type: Number,
+        required: true
     },
-    color: { 
-        type: String, 
-        required: true 
+    color: {
+        type: String,
+        required: true
     },
-    seatingCapacity: { 
-        type: Number, 
-        required: true 
+    seatingCapacity: {
+        type: Number,
+        required: true
     },
-    fuelType: { 
-        type: String, 
-        required: true 
+    fuelType: {
+        type: String,
+        required: true
     }, // e.g., 'Gasoline', 'Electric', 'Hybrid'
-    mileage: { 
-        type: Number, 
-        required: true 
+    mileage: {
+        type: Number,
+        required: true
     },
     imageUrl: String,
     purchasedPrice: Number,
