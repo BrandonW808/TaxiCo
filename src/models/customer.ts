@@ -1,8 +1,8 @@
 import mongoose, { Schema } from 'mongoose';
-import { ICustomer } from '@/types';
+import { ICustomer } from '../types';
 import { constants, config } from '@/config';
 
-const customerSchema = new Schema<ICustomer>({
+const customerSchema = new Schema({
   name: {
     type: String,
     required: true,

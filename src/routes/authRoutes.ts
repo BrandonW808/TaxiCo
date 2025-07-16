@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { AuthController } from '@/controllers/auth.controller';
+import { AuthController } from '@/controllers/authController';
 import { ValidationUtil } from '@/utils/validation';
-import { 
-  handleValidationErrors, 
-  authenticateToken, 
-  logoutMiddleware 
+import {
+  handleValidationErrors,
+  authenticateToken,
+  logoutMiddleware
 } from '@/middleware';
 
 const router = Router();
 
 // Registration routes
-router.post('/register/customer', 
+router.post('/register/customer',
   ValidationUtil.registration(),
   handleValidationErrors,
   AuthController.register

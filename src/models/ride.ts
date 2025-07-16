@@ -2,7 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import { IRide } from '@/types';
 import { constants } from '@/config';
 
-const rideSchema = new Schema<IRide>({
+const rideSchema = new Schema({
   cab: {
     type: Schema.Types.ObjectId,
     ref: 'Cab',

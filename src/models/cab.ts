@@ -2,7 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import { ICab } from '@/types';
 import { constants } from '@/config';
 
-const cabSchema = new Schema<ICab>({
+const cabSchema = new Schema({
   name: {
     type: String,
     required: true,

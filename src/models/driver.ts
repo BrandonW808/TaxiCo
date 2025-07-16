@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { IDriver } from '@/types';
 import { constants, config } from '@/config';
 
-const driverSchema = new Schema<IDriver>({
+const driverSchema = new Schema({
   name: {
     type: String,
     required: true,

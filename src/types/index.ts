@@ -16,6 +16,7 @@ declare global {
 
 // Base interfaces for all models
 export interface IUser extends Document {
+  lastLogin?: Date;
   _id: string;
   name: string;
   email: string;
@@ -27,7 +28,6 @@ export interface IUser extends Document {
 }
 
 export interface ICustomer extends IUser {
-  lastLogin?: Date;
   loginAttempts?: number;
   lockUntil?: Date;
   isLocked?: boolean;
@@ -147,7 +147,11 @@ export interface ValidationError {
 
 // Service layer types
 export interface CreateUserData {
-  name: string;
+  driverNumber?: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
+  }; name: string;
   email: string;
   password: string;
   role?: Role;

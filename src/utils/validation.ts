@@ -2,7 +2,7 @@ import { body, ValidationChain } from 'express-validator';
 import { constants } from '@/config';
 
 export class ValidationUtil {
-  static name(): ValidationChain {
+  static objectName(): ValidationChain {
     return body('name')
       .isLength({ min: 2, max: 50 })
       .trim()
@@ -126,7 +126,7 @@ export class ValidationUtil {
   // Registration validation
   static registration(): ValidationChain[] {
     return [
-      this.name(),
+      this.objectName(),
       this.email(),
       this.password()
     ];
@@ -154,7 +154,7 @@ export class ValidationUtil {
   // Driver registration validation
   static driverRegistration(): ValidationChain[] {
     return [
-      this.name(),
+      this.objectName(),
       this.email(),
       this.password(),
       this.driverNumber(),

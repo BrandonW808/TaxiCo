@@ -7,7 +7,7 @@ import { AuthService } from '@/services/auth.service';
 import { ResponseUtil } from '@/utils/response';
 import { AuthUtil } from '@/utils/auth';
 import { config, constants } from '@/config';
-import { Role } from '@/types';
+import { Role } from '@/config';
 
 // Security middleware
 export const securityHeaders = helmet({
@@ -152,7 +152,7 @@ export const authenticateForUpdate = async (req: Request, res: Response, next: N
 
     try {
       const targetUserId = req.params.id || req.body.id;
-      
+
       // Check if user is trying to update their own data or is admin
       if (targetUserId && targetUserId !== req.userId && !req.isAdmin) {
         ResponseUtil.forbidden(res, 'You can only update your own data', constants.ERROR_CODES.INSUFFICIENT_PERMISSIONS);
@@ -181,12 +181,12 @@ export const authenticateForUpdate = async (req: Request, res: Response, next: N
 // Ownership validation middleware
 export const validateOwnership = (req: Request, res: Response, next: NextFunction): void => {
   const resourceUserId = req.params.userId || req.body.userId;
-  
+
   if (resourceUserId && resourceUserId !== req.userId && !req.isAdmin) {
     ResponseUtil.forbidden(res, 'Access denied - you can only access your own resources', constants.ERROR_CODES.INSUFFICIENT_PERMISSIONS);
     return;
   }
-  
+
   next();
 };
 
@@ -206,11 +206,11 @@ export const logoutMiddleware = async (req: Request, res: Response, next: NextFu
 // Error handling middleware
 export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction): void => {
   console.error('Unhandled error:', error);
-  
+
   if (res.headersSent) {
     return next(error);
   }
-  
+
   ResponseUtil.internalError(res, 'Internal server error', error.message);
 };
 

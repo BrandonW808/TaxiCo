@@ -1,6 +1,6 @@
 import { AuthUtil, TokenBlacklist } from '@/utils/auth';
-import { config, constants } from '@/config';
-import { CreateUserData, LoginData, AuthResponse, IUser, Role } from '@/types';
+import { constants } from '@/config';
+import { CreateUserData, LoginData, AuthResponse, IUser } from '@/types';
 import Customer from '@/models/customer';
 import Driver from '@/models/driver';
 
@@ -80,7 +80,7 @@ export class AuthService {
       }
 
       // Check if account is locked (for customers)
-      if (user.constructor.modelName === 'Customer' && (user as any).isLocked) {
+      if (user.$model.name === 'Customer' && (user as any).isLocked) {
         return {
           success: false,
           message: 'Account is locked due to too many failed login attempts'
@@ -91,7 +91,7 @@ export class AuthService {
       const isMatch = await AuthUtil.comparePassword(password, user.password);
       if (!isMatch) {
         // Increment login attempts for customers
-        if (user.constructor.modelName === 'Customer') {
+        if (user.$model.name === 'Customer') {
           await (user as any).incLoginAttempts();
         }
         return {
@@ -101,7 +101,7 @@ export class AuthService {
       }
 
       // Reset login attempts for customers
-      if (user.constructor.modelName === 'Customer') {
+      if (user.$model.name === 'Customer') {
         await (user as any).resetLoginAttempts();
       }
 

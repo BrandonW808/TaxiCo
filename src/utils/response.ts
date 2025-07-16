@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { ApiResponse, ErrorCode } from '@/types';
-import { constants } from '@/config';
+import { ApiResponse } from '@/types';
+import { constants, ErrorCode } from '@/config';
 
 export class ResponseUtil {
   static success<T>(res: Response, data?: T, message: string = 'Success', statusCode: number = 200): void {

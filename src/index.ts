@@ -3,10 +3,10 @@ import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import { config } from '@/config';
 import routes from '@/routes';
-import { 
-  securityHeaders, 
-  corsMiddleware, 
-  rateLimitMiddleware, 
+import {
+  securityHeaders,
+  corsMiddleware,
+  rateLimitMiddleware,
   sanitizeInput,
   errorHandler,
   notFoundHandler
@@ -55,7 +55,7 @@ const connectDB = async (): Promise<void> => {
 const startServer = async (): Promise<void> => {
   try {
     await connectDB();
-    
+
     app.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`🌍 Environment: ${config.nodeEnv}`);
@@ -70,11 +70,11 @@ const startServer = async (): Promise<void> => {
 // Graceful shutdown
 const gracefulShutdown = async (signal: string): Promise<void> => {
   console.log(`\n🛑 Received ${signal}. Shutting down gracefully...`);
-  
+
   try {
     // Close database connection
     await mongoose.connection.close();
-    
+
     console.log('👋 Server shut down gracefully');
     process.exit(0);
   } catch (error) {

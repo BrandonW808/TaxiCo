@@ -1,7 +1,6 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { config } from '@/config';
-import { Role } from '@/types';
+import { config, Role } from '@/config';
 
 export class AuthUtil {
   static getJwtSecret(): string {
@@ -25,7 +24,7 @@ export class AuthUtil {
     role: Role;
   }): string {
     const options: SignOptions = {
-      expiresIn: config.jwtExpiresIn,
+      expiresIn: config.jwtExpiresIn as any,
       issuer: 'taxicom-backend',
       subject: payload.id
     };
@@ -75,7 +74,7 @@ export class TokenBlacklist {
 
   static add(token: string): void {
     this.blacklist.add(token);
-    
+
     // Remove token after 24 hours
     setTimeout(() => {
       this.blacklist.delete(token);

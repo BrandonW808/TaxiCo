@@ -1,9 +1,18 @@
 import { Router } from 'express';
-import { CustomerController } from '@/controllers/customer.controller';
+import {
+  getProfile,
+  updateProfile,
+  getAllCustomers,
+  getActiveCustomers,
+  lockCustomer,
+  unlockCustomer,
+  resetLoginAttempts,
+  deleteCustomer
+} from '@/controllers/customerController';
 import { ValidationUtil } from '@/utils/validation';
-import { 
-  handleValidationErrors, 
-  authenticateToken, 
+import {
+  handleValidationErrors,
+  authenticateToken,
   authenticateForUpdate,
   requireAdmin,
   requireRole
@@ -11,19 +20,18 @@ import {
 import { constants } from '@/config';
 
 const router = Router();
-const customerController = new CustomerController();
 
 // Profile routes
 router.get('/profile',
   authenticateToken,
   requireRole([constants.ROLES.CUSTOMER, constants.ROLES.ADMIN]),
-  customerController.getProfile.bind(customerController)
+  getProfile
 );
 
 router.get('/profile/:id',
   authenticateToken,
   requireRole([constants.ROLES.CUSTOMER, constants.ROLES.ADMIN]),
-  customerController.getProfile.bind(customerController)
+  getProfile
 );
 
 router.put('/profile',
@@ -31,7 +39,7 @@ router.put('/profile',
   requireRole([constants.ROLES.CUSTOMER, constants.ROLES.ADMIN]),
   ValidationUtil.update(),
   handleValidationErrors,
-  customerController.updateProfile.bind(customerController)
+  updateProfile
 );
 
 router.put('/profile/:id',
@@ -39,50 +47,44 @@ router.put('/profile/:id',
   requireRole([constants.ROLES.CUSTOMER, constants.ROLES.ADMIN]),
   ValidationUtil.update(),
   handleValidationErrors,
-  customerController.updateProfile.bind(customerController)
+  updateProfile
 );
 
 // Admin only routes
 router.get('/all',
   authenticateToken,
   requireAdmin,
-  customerController.getAllCustomers.bind(customerController)
+  getAllCustomers
 );
 
 router.get('/active',
   authenticateToken,
   requireAdmin,
-  customerController.getActiveCustomers.bind(customerController)
+  getActiveCustomers
 );
 
 router.post('/lock/:id',
   authenticateToken,
   requireAdmin,
-  customerController.lockCustomer.bind(customerController)
+  lockCustomer
 );
 
 router.post('/unlock/:id',
   authenticateToken,
   requireAdmin,
-  customerController.unlockCustomer.bind(customerController)
+  unlockCustomer
 );
 
 router.post('/reset-login-attempts/:id',
   authenticateToken,
   requireAdmin,
-  customerController.resetLoginAttempts.bind(customerController)
-);
-
-router.get('/stats',
-  authenticateToken,
-  requireAdmin,
-  customerController.getCustomerStats.bind(customerController)
+  resetLoginAttempts
 );
 
 router.delete('/:id',
   authenticateToken,
   requireAdmin,
-  customerController.deleteCustomer.bind(customerController)
+  deleteCustomer
 );
 
 export default router;
