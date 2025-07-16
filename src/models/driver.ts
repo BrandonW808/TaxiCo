@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 
 export interface IDriver extends Document {
     name: string;
+    email: string;
     driverNumber: string;
     location: {
         type: 'Point';
@@ -18,15 +19,20 @@ export interface IDriver extends Document {
 }
 
 const driverSchema = new mongoose.Schema({
-    name: { 
-        type: String, 
+    name: {
+        type: String,
         required: true,
         trim: true
     },
-    driverNumber: { 
-        type: String, 
+    email: {
+        type: String,
         required: true,
-        unique: true 
+        trim: true
+    },
+    driverNumber: {
+        type: String,
+        required: true,
+        unique: true
     },
     location: {
         type: {
