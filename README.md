@@ -1,368 +1,192 @@
-# TaxiCo Backend - Enhanced Security Implementation
+# TaxiCo Backend
 
-## Overview
+A clean, modern, and scalable backend for a taxi booking application built with Node.js, Express, TypeScript, and MongoDB.
 
-This is the enhanced version of the TaxiCo backend application with comprehensive security improvements, particularly focused on middleware security and custom Request property handling.
+## 🚀 Features
 
-## 🔒 Security Enhancements
-
-### 1. Authentication & Authorization
-- **JWT Token Management**: Environment-based secrets with token blacklisting
-- **Role-based Access Control**: Admin/customer role separation
-- **Account Locking**: Automatic account lockout after failed attempts
-- **Update Protection**: Enhanced security for sensitive operations
-- **Ownership Validation**: Users can only access their own resources
-
-### 2. Input Validation & Sanitization
-- **Comprehensive Validation**: Using express-validator for all inputs
-- **XSS Protection**: Input sanitization middleware
-- **SQL Injection Prevention**: Mongoose ODM with validation
-- **Password Security**: Strong password requirements and hashing
-
-### 3. Rate Limiting
-- **General API Rate Limiting**: 100 requests per 15 minutes
-- **Authentication Rate Limiting**: 5 attempts per 15 minutes
-- **Update Rate Limiting**: 10 requests per 5 minutes
-- **Email-based Rate Limiting**: Prevent brute force attacks
-
-### 4. Security Headers & CORS
-- **Helmet.js Integration**: Security headers (CSP, HSTS, etc.)
-- **CORS Configuration**: Environment-based origin control
-- **Cookie Security**: Secure cookie configuration
-
-### 5. TypeScript Type Safety
-- **Custom Request Properties**: Proper type definitions for `req.customer`, `req.token`, etc.
-- **Type Safety**: Full TypeScript support with intellisense
-- **Interface Definitions**: Comprehensive type definitions
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Copy environment configuration
-cp .env.example .env
-
-# Edit .env with your configuration
-# Make sure to set a secure JWT_SECRET (at least 32 characters)
-```
-
-### Environment Variables
-
-```bash
-# Required Security Variables
-JWT_SECRET=your-super-secret-jwt-key-here-should-be-at-least-32-characters-long
-JWT_EXPIRES_IN=1h
-NODE_ENV=production
-ALLOWED_ORIGINS=https://yourapp.com,https://admin.yourapp.com
-
-# Database
-MONGO_URI=mongodb://localhost:27017/taxico
-
-# Rate Limiting (optional - defaults provided)
-GENERAL_RATE_LIMIT_MAX=100
-AUTH_RATE_LIMIT_MAX=5
-UPDATE_RATE_LIMIT_MAX=10
-```
-
-### Running the Application
-
-```bash
-# Development
-npm run dev
-
-# Production
-npm run build
-npm start
-
-# With backup scheduler
-BACKUP_SCHEDULER_ENABLED=true npm run dev
-```
-
-## 📚 API Documentation
-
-### Authentication Routes
-
-#### Register
-```bash
-POST /api/customers/register
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "SecurePass123!",
-  "confirmPassword": "SecurePass123!"
-}
-```
-
-#### Login
-```bash
-POST /api/customers/login
-Content-Type: application/json
-
-{
-  "email": "john@example.com",
-  "password": "SecurePass123!"
-}
-```
-
-#### Get Profile
-```bash
-GET /api/customers/profile
-Authorization: Bearer <token>
-```
-
-#### Update Profile
-```bash
-PUT /api/customers/update
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "John Smith",
-  "email": "johnsmith@example.com"
-}
-```
-
-#### Logout
-```bash
-POST /api/customers/logout
-Authorization: Bearer <token>
-```
-
-### Security Features in Action
-
-#### Rate Limiting
-```bash
-# After 5 failed login attempts
-HTTP 429 Too Many Requests
-{
-  "error": "Too many authentication attempts from this IP, please try again later."
-}
-```
-
-#### Input Validation
-```bash
-# Invalid input
-HTTP 400 Bad Request
-{
-  "error": "Validation failed",
-  "details": [
-    {
-      "field": "email",
-      "message": "Valid email address required",
-      "value": "invalid-email"
-    }
-  ],
-  "code": "VALIDATION_ERROR"
-}
-```
-
-#### Authentication Errors
-```bash
-# Invalid token
-HTTP 401 Unauthorized
-{
-  "error": "Invalid token",
-  "code": "INVALID_TOKEN"
-}
-```
-
-## 🔧 Middleware Usage
-
-### Basic Authentication
-```typescript
-import { authenticateToken } from '../middleware/auth';
-
-router.get('/protected', authenticateToken, (req, res) => {
-  const customer = req.customer;  // Type: ICustomer | undefined
-  const userId = req.userId;      // Type: string | undefined
-  // ...
-});
-```
-
-### Protected Updates
-```typescript
-import { authenticateForUpdate, validateUpdateInput } from '../middleware/auth';
-import { updateRateLimit } from '../middleware/security';
-
-router.put('/update', 
-  updateRateLimit,
-  authenticateForUpdate,
-  validateUpdateInput,
-  updateController
-);
-```
-
-### Admin-only Routes
-```typescript
-import { authenticateToken, requireAdmin } from '../middleware/auth';
-
-router.get('/admin/users', 
-  authenticateToken,
-  requireAdmin,
-  getUsersController
-);
-```
-
-### Custom Validation
-```typescript
-import { customerValidation, handleValidationErrors } from '../middleware/validation';
-
-router.post('/register',
-  customerValidation.register,
-  handleValidationErrors,
-  registerController
-);
-```
+- **Clean Architecture**: Organized with proper separation of concerns
+- **TypeScript**: Full type safety throughout the application
+- **Authentication & Authorization**: JWT-based auth with role-based access control
+- **Unified Services**: Consistent service layer pattern
+- **Validation**: Comprehensive input validation using express-validator
+- **Error Handling**: Centralized error handling with consistent API responses
+- **Security**: Helmet, CORS, rate limiting, and input sanitization
+- **Database**: MongoDB with Mongoose ODM
+- **Geospatial**: Location-based queries for drivers and rides
+- **Backup System**: Automated backup functionality (from original code)
 
 ## 🏗️ Project Structure
 
 ```
 src/
-├── controllers/
-│   ├── customerController.ts    # Enhanced with validation
-│   └── backupController.ts      # Backup management
-├── middleware/
-│   ├── auth.ts                  # Authentication & authorization
-│   ├── security.ts              # Rate limiting & security headers
-│   └── validation.ts            # Input validation rules
-├── models/
-│   ├── customer.ts              # Enhanced with security fields
-│   ├── driver.ts                # Driver model
-│   ├── cab.ts                   # Cab model
-│   └── ride.ts                  # Ride model
-├── routes/
-│   ├── customerRoutes.ts        # Protected customer routes
-│   └── backupRoutes.ts          # Backup routes
-├── types/
-│   └── express.d.ts             # Custom Request properties
-└── utils/
-    ├── backup.ts                # Backup utilities
-    ├── backupScheduler.ts       # Scheduled backups
-    └── gcs.ts                   # Google Cloud Storage
+├── config/           # Configuration and constants
+├── controllers/      # Route handlers
+├── middleware/       # Custom middleware
+├── models/          # Database models
+├── routes/          # API routes
+├── services/        # Business logic layer
+├── types/           # TypeScript type definitions
+├── utils/           # Utility functions
+└── index.ts         # Application entry point
 ```
 
-## 🛡️ Security Best Practices
+## 🔧 Installation
 
-### 1. Environment Configuration
-- Never commit `.env` files
-- Use strong JWT secrets (32+ characters)
-- Set appropriate CORS origins
-- Configure secure cookies in production
-
-### 2. Authentication
-- Implement account lockout policies
-- Use strong password requirements
-- Regularly rotate JWT secrets
-- Implement token refresh mechanisms
-
-### 3. Input Validation
-- Validate all user inputs
-- Sanitize data before processing
-- Use parameterized queries
-- Implement proper error handling
-
-### 4. Rate Limiting
-- Monitor rate limit hits
-- Implement progressive delays
-- Use distributed rate limiting in production
-- Consider IP whitelisting for admin routes
-
-### 5. Monitoring & Logging
-- Log authentication attempts
-- Monitor failed validations
-- Track rate limit violations
-- Implement security alerts
-
-## 🧪 Testing Security
-
-### Authentication Tests
-```bash
-# Test rate limiting
-for i in {1..6}; do
-  curl -X POST http://localhost:3000/api/customers/login \
-    -H "Content-Type: application/json" \
-    -d '{"email":"test@example.com","password":"wrong"}'
-done
-
-# Test token validation
-curl -X GET http://localhost:3000/api/customers/profile \
-  -H "Authorization: Bearer invalid-token"
-```
-
-### Update Protection Tests
-```bash
-# Test update without authentication
-curl -X PUT http://localhost:3000/api/customers/update \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Hacker"}'
-
-# Test ownership validation
-curl -X PUT http://localhost:3000/api/customers/update \
-  -H "Authorization: Bearer valid-token" \
-  -H "Content-Type: application/json" \
-  -d '{"id":"other-user-id","name":"Hack"}'
-```
-
-## 📋 Development Notes
-
-### Custom Request Properties
-The application properly extends Express Request interface:
-
-```typescript
-// Automatic type inference
-app.get('/profile', authenticateToken, (req, res) => {
-  const customer = req.customer;  // Type: ICustomer | undefined
-  const token = req.token;        // Type: string | undefined
-  const userId = req.userId;      // Type: string | undefined
-  const isAdmin = req.isAdmin;    // Type: boolean | undefined
-});
-```
-
-### Error Handling
-Standardized error responses with codes:
-
-```typescript
-{
-  "error": "Error message",
-  "code": "ERROR_CODE",
-  "details": [...] // When applicable
-}
-```
-
-## 🔄 Migration from Original
-
-1. **Install New Dependencies**:
+1. Clone the repository
+2. Install dependencies:
    ```bash
-   npm install express-rate-limit express-validator helmet bcrypt jsonwebtoken cors cookie-parser
+   npm install
    ```
 
-2. **Update Environment Variables**:
-   - Set `JWT_SECRET` to a secure value
-   - Configure `ALLOWED_ORIGINS`
-   - Set rate limiting options
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
 
-3. **Update Imports**:
-   - Replace old middleware imports
-   - Update route definitions
+4. Configure your environment variables in `.env`:
+   ```
+   PORT=3000
+   NODE_ENV=development
+   MONGO_URI=mongodb://localhost:27017/taxicodev
+   JWT_SECRET=your-secret-key-change-in-production
+   JWT_EXPIRES_IN=1h
+   CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+   ```
 
-4. **Database Migration**:
-   - New customer model fields have default values
-   - Existing data remains compatible
+## 🚀 Running the Application
+
+### Development
+```bash
+npm run dev
+```
+
+### Production
+```bash
+npm run build
+npm start
+```
+
+### Other Commands
+```bash
+npm run lint          # Run ESLint
+npm run format        # Format code with Prettier
+npm test             # Run tests
+npm run backup       # Create backup
+```
+
+## 🔐 API Endpoints
+
+### Authentication
+- `POST /api/auth/register/customer` - Register a new customer
+- `POST /api/auth/register/driver` - Register a new driver
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/profile` - Get user profile
+- `POST /api/auth/refresh` - Refresh JWT token
+
+### Customers
+- `GET /api/customers/profile` - Get customer profile
+- `PUT /api/customers/profile` - Update customer profile
+- `GET /api/customers/all` - Get all customers (Admin only)
+- `GET /api/customers/active` - Get active customers (Admin only)
+- `POST /api/customers/lock/:id` - Lock customer account (Admin only)
+- `POST /api/customers/unlock/:id` - Unlock customer account (Admin only)
+- `GET /api/customers/stats` - Get customer statistics (Admin only)
+
+### Drivers
+- `GET /api/drivers/profile` - Get driver profile
+- `PUT /api/drivers/profile` - Update driver profile
+- `PUT /api/drivers/location` - Update driver location
+- `POST /api/drivers/nearby` - Find nearby drivers
+- `GET /api/drivers/all` - Get all drivers (Admin only)
+- `GET /api/drivers/active` - Get active drivers (Admin only)
+- `GET /api/drivers/stats` - Get driver statistics (Admin only)
+
+### Health Check
+- `GET /api/health` - Health check endpoint
+
+## 🏛️ Architecture Improvements
+
+### What Was Cleaned Up
+
+1. **Unified Configuration**: All configuration moved to `src/config/index.ts`
+2. **Service Layer**: Business logic extracted to service classes
+3. **Consistent Error Handling**: Unified error responses using `ResponseUtil`
+4. **Validation Utilities**: Reusable validation chains
+5. **Auth Utilities**: Centralized authentication logic
+6. **Type Safety**: Comprehensive TypeScript interfaces
+7. **Clean Models**: Improved model definitions with proper indexing
+8. **Middleware Organization**: All middleware in one place
+9. **Route Organization**: Clean, RESTful route structure
+10. **Response Standardization**: Consistent API response format
+
+### Key Changes Made
+
+- **Removed Code Duplication**: Common patterns extracted to utilities
+- **Improved Type Safety**: Better TypeScript interfaces and types
+- **Enhanced Security**: Better token management and validation
+- **Cleaner Structure**: Organized into logical modules
+- **Error Handling**: Consistent error responses across all endpoints
+- **Validation**: Centralized validation rules
+- **Service Layer**: Business logic separated from controllers
+
+## 🔒 Security Features
+
+- **JWT Authentication**: Secure token-based authentication
+- **Role-based Access Control**: Different permissions for customers, drivers, and admins
+- **Account Locking**: Automatic account locking after failed login attempts
+- **Input Sanitization**: XSS protection and input cleaning
+- **Rate Limiting**: Protection against brute force attacks
+- **CORS**: Configurable cross-origin resource sharing
+- **Security Headers**: Helmet.js for security headers
+
+## 📊 Models
+
+### Customer
+- Personal information (name, email)
+- Authentication (password, login attempts, account locking)
+- Role-based permissions
+
+### Driver
+- Personal information (name, email, driver number)
+- Location tracking (GeoJSON Point)
+- Authentication tokens
+- Active status
+
+### Ride
+- Trip details (pickup, dropoff locations)
+- Status tracking (pending, assigned, completed, etc.)
+- Payment information
+- Customer and driver references
+
+### Cab
+- Vehicle information (make, model, year, etc.)
+- Location tracking
+- Maintenance history
+- Driver assignments
+- Status management
+
+## 🔄 Migration from Original Code
+
+The original code has been significantly refactored to:
+- Remove duplicate code patterns
+- Improve consistency across the codebase
+- Add proper error handling
+- Enhance type safety
+- Organize code into logical modules
+- Add comprehensive validation
+- Improve security practices
+
+The functionality remains the same while providing a much cleaner and more maintainable codebase.
 
 ## 🤝 Contributing
 
-1. Follow TypeScript strict mode
-2. Add proper type definitions
-3. Include security tests
-4. Update documentation
-5. Follow existing code patterns
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## 📄 License
+## 📝 License
 
-MIT License - See LICENSE file for details.
+This project is licensed under the MIT License.

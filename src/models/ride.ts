@@ -1,89 +1,104 @@
-// models/ride.ts
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import { IRide } from '@/types';
+import { constants } from '@/config';
 
-export interface IRide extends Document {
-    cab: mongoose.Types.ObjectId;
-    driver: mongoose.Types.ObjectId;
-    customer: mongoose.Types.ObjectId;
-    pickupLocation: {
-        type: 'Point';
-        coordinates: [number, number];
-    };
-    dropoffLocation: {
-        type: 'Point';
-        coordinates: [number, number];
-    };
-    status: 'pending' | 'requested' | 'assigned' | 'completed' | 'cancelled';
-    requestTime: Date;
-    startTime?: Date;
-    endTime?: Date;
-    fare?: number;
-    payment?: {
-        method: string;
-        tip?: number;
-        amountPaid?: number;
-    };
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-// Ride Schema
-const rideSchema = new mongoose.Schema({
-    cab: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cab'
+const rideSchema = new Schema<IRide>({
+  cab: {
+    type: Schema.Types.ObjectId,
+    ref: 'Cab',
+    required: true
+  },
+  driver: {
+    type: Schema.Types.ObjectId,
+    ref: 'Driver',
+    required: true
+  },
+  customer: {
+    type: Schema.Types.ObjectId,
+    ref: 'Customer',
+    required: true
+  },
+  pickupLocation: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+      default: 'Point'
     },
-    driver: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Driver'
-    },
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer'
-    },
-    pickupLocation: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            required: true
-        },
-        coordinates: {
-            type: [Number],
-            required: true
-        }
-    },
-    dropoffLocation: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            required: true
-        },
-        coordinates: {
-            type: [Number],
-            required: true
-        }
-    },
-    status: {
-        type: String,
-        enum: ['pending', 'requested', 'assigned', 'completed', 'cancelled'],
-        default: 'pending'
-    },
-    requestTime: {
-        type: Date,
-        default: Date.now
-    },
-    startTime: Date,
-    endTime: Date,
-    fare: Number,
-    payment: {
-        method: { type: String },
-        tip: { type: Number },
-        amountPaid: { type: Number },
+    coordinates: {
+      type: [Number],
+      required: true
     }
-}, { timestamps: true });
+  },
+  dropoffLocation: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
+  },
+  status: {
+    type: String,
+    enum: Object.values(constants.RIDE_STATUS),
+    default: constants.RIDE_STATUS.PENDING
+  },
+  requestTime: {
+    type: Date,
+    default: Date.now
+  },
+  startTime: {
+    type: Date
+  },
+  endTime: {
+    type: Date
+  },
+  fare: {
+    type: Number,
+    min: 0
+  },
+  payment: {
+    method: {
+      type: String,
+      enum: ['cash', 'card', 'digital_wallet'],
+      default: 'cash'
+    },
+    tip: {
+      type: Number,
+      min: 0,
+      default: 0
+    },
+    amountPaid: {
+      type: Number,
+      min: 0
+    }
+  }
+}, {
+  timestamps: true
+});
 
-// Index for geospatial queries
+// Indexes for geospatial queries
 rideSchema.index({ pickupLocation: '2dsphere' });
 rideSchema.index({ dropoffLocation: '2dsphere' });
 
-export default mongoose.model<IRide>('Ride', rideSchema);
+// Other indexes for better performance
+rideSchema.index({ status: 1 });
+rideSchema.index({ customer: 1 });
+rideSchema.index({ driver: 1 });
+rideSchema.index({ cab: 1 });
+rideSchema.index({ requestTime: -1 });
+rideSchema.index({ startTime: -1 });
+rideSchema.index({ endTime: -1 });
+
+// Compound indexes for common queries
+rideSchema.index({ customer: 1, status: 1 });
+rideSchema.index({ driver: 1, status: 1 });
+rideSchema.index({ status: 1, requestTime: -1 });
+
+const Ride = mongoose.model<IRide>('Ride', rideSchema);
+
+export default Ride;

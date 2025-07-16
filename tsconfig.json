@@ -16,7 +16,18 @@
     "declarationMap": true,
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["node", "express"]
+    "types": ["node", "express"],
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@models/*": ["models/*"],
+      "@controllers/*": ["controllers/*"],
+      "@services/*": ["services/*"],
+      "@middleware/*": ["middleware/*"],
+      "@utils/*": ["utils/*"],
+      "@types/*": ["types/*"],
+      "@routes/*": ["routes/*"]
+    }
   },
   "include": [
     "src/**/*"
